@@ -1,16 +1,38 @@
-# Project Overview
-Comment exploiter un fichier Telepac en .xml ?
+# OUTILS_telepac-xml-reader
 
-# Installation Instructions
-TBD
+## Table des matières
 
-# Usage Guide
+- 🪧 [À propos](#à-propos)
+- 📦 [Prérequis](#pré-requis)
+- 🚀 [Installation](#installation)
+- 🛠️ [Utilisation](#utilisation)
+- 🤝 [Contribution](#contribution)
+- 📚 [Documentation](#documentation)
+- 🏷️ [Gestion des versions](#gestion-des-versions)
+- 📝 [Licence](#licence)
 
 
+## À propos
+L'objectif de ce code est de pouvoir extraire les informations d'un fichier XML telepac d'un agriculteur.
 
-## scan_xml.py
+## Pré-requis
+[Liste des éléments nécessaires au bon fonctionnement du projet - éventuellement façon de les installer]
+
+## Installation
+[Étapes des commandes à lancer pour installer le projet en local]
+1. Clone the repository
+   ```sh
+   git clone https://github.com/your_username_/Project-Name.git
+   ```
+
+2. Install packages
+   ```sh
+   brew install package
+   ```
+
+## Utilisation
+### scan_xml.py
 Outil de scan du fichier xml.
-
 Affiche la liste des éléments du Tree xml.
 ```bash
 usage:
@@ -27,12 +49,8 @@ example:
   python read_xml.py telepac_filename.xml
 ```
 
-
-
-
-## read_xml.py
+### read_xml.py
 Outil d'extraction des données du xml vers un fichier excel.
-
 Possible de visualiser les géométries à l'aide de Folium.
 ```bash
 usage:
@@ -49,3 +67,16 @@ required arguments:
 example:
   python read_xml.py telepac_filename.xml --visu_folium --excel_filename="output_excel.xlsx"
 ```
+
+
+## Contribution
+[Qui maintient, contribue au projet, qui est le responsable]
+
+## Documentation
+[Lien vers documentations externes ou documentation embarquée ici avec table des matières]
+
+## Gestion des versions
+[Page des Releases]
+
+## Licence
+[Voir le fichier [LICENSE](./LICENSE.md) du dépôt. https://choosealicense.com/]
