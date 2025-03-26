@@ -1,5 +1,5 @@
 """
-Scan d'un fichier xml : affiche la liste des élements 
+Scan d'un fichier xml : affiche la liste des élements
 """
 
 import argparse
@@ -69,7 +69,7 @@ def create_liste_elements(xml_filename):
 
 def create_pickle(pkl_filename, list_elem_uniq):
     """
-    TBD
+    Création d'un fichier pickle contenant les éléments uniques du fichier xml
     """
     # si le fichier existe on le complete avec les nouveaux éléments
     fileObj = Path(pkl_filename)
@@ -92,7 +92,7 @@ def create_pickle(pkl_filename, list_elem_uniq):
 
 def show_pickle_diff(pkl_filename, list_elem_uniq):
     """
-    TBD
+    Affiche la différence entre les éléments du fichier xml et ceux du pickle
     """
     with open(pkl_filename, "rb") as f:
         data_loaded = pickle.load(f)

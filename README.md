@@ -46,7 +46,7 @@ required arguments:
   --precise   Scan détaillé du fichier xml. TBD.
 
 example:
-  python read_xml.py telepac_filename.xml
+  python src/scan_xml.py data/telepac_filename.xml
 ```
 
 ### read_xml.py
@@ -62,10 +62,10 @@ optional arguments:
 required arguments:
   input_xml             nom du fichier XML Telepac à analyser
   --visu_folium         Création de fichiers html pour la visualisation des géométries contenus dans le xml.
-  --excel_filename EXCEL_FILENAME
+  --excel_filename      EXCEL_FILENAME
 
 example:
-  python read_xml.py telepac_filename.xml --visu_folium --excel_filename="output_excel.xlsx"
+  python read_xml.py data/telepac_filename.xml --visu_folium --excel_filename="output_excel.xlsx"
 ```
 
 
