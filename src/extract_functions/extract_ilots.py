@@ -25,8 +25,8 @@ def extract_ilots(xml_root, ns, ns_gml):
 
             list_ilots.append(
                 {
-                    "numero-ilot": ilot.attrib["numero-ilot"],
-                    "numero-ilot-reference": ilot.attrib["numero-ilot-reference"],
+                    "numero-ilot": ilot.attrib.get("numero-ilot"),
+                    "numero-ilot-reference": ilot.attrib.get("numero-ilot-reference"),
                     "commune": commune,
                     "geometry": polygon,
                 }
