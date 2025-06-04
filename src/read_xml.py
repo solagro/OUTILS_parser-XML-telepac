@@ -249,7 +249,7 @@ if __name__ == "__main__":
                 "gdf": gdf_parcelles,
                 "name": "Parcelles",
                 "color": "green",
-                "info": "numero-ilot-reference, code-culture, surface-admissible",
+                "info": "numero-ilot-reference, code-culture",
             },
             {
                 "gdf": gdf_bio,
