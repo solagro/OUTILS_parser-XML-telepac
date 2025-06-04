@@ -9,9 +9,10 @@ import argparse
 import xml.etree.ElementTree as ET
 import os
 import pandas as pd
-import geopandas as gpd
 import folium
 from folium.plugins import FloatImage, MiniMap
+from branca.element import Template, MacroElement
+
 
 # Importer les fonctions d'extraction nécessaires
 from extract_functions.extract_aides_pac import extract_aides_pac
@@ -82,11 +83,12 @@ def check_extension(choices):
     return Act
 
 
-def visu_folium_layers(layers, html_output="output.html"):
+def visu_folium_layers(layers, title_folium="Exploitation", html_output="output.html"):
     """
     Visualisation dynamique avec Folium à partir d'une liste de couches.
 
     Paramètres :
+    - title : titre de la carte (par défaut "Exploitation")
     - layers : liste de dictionnaires, chacun contenant :
         {
             "gdf": GeoDataFrame,
@@ -121,7 +123,10 @@ def visu_folium_layers(layers, html_output="output.html"):
         gdf = gdf.to_crs(epsg=4326)
         color_layer = layer.get("color", "blue")
         show_layer = layer.get("show", False)
-        info_layer = layer.get("info", None)
+        info_layer = layer.get("info", "")
+        tooltip_fields = [
+            field.strip() for field in info_layer.split(",") if field.strip()
+        ]
 
         folium.GeoJson(
             data=gdf.to_json(),
@@ -140,12 +145,33 @@ def visu_folium_layers(layers, html_output="output.html"):
                 "fillOpacity": 0.7,
             },
             tooltip=folium.GeoJsonTooltip(
-                fields=[info_layer],
-                aliases=[info_layer],
+                fields=tooltip_fields,
+                aliases=tooltip_fields,
             ),
         ).add_to(m)
 
-    folium.LayerControl().add_to(m)
+    folium.LayerControl(collapsed=False).add_to(m)
+
+    # Ajout d'un titre HTML contenant le nom de l'exploitation
+    title_html = f"""
+    {{% macro html(this, kwargs) %}}
+    <div style="position: fixed;
+                top: 10px;
+                right: 500px;
+                z-index: 9999;
+                background-color: white;
+                padding: 6px 12px;
+                border: 2px solid grey;
+                border-radius: 4px;
+                font-size: 14px;
+                box-shadow: 2px 2px 6px rgba(0,0,0,0.3);">
+        <strong>EXTRACTION DU XML TELEPAC - {title_folium}</strong>
+    </div>
+    {{% endmacro %}}
+    """
+    title = MacroElement()
+    title._template = Template(title_html)
+    m.get_root().add_child(title)
 
     # Ajout du logo Solagro
     url_logo = "https://osez-agroecologie.org/images/env/logo_solagro_hd.png"
@@ -223,23 +249,25 @@ if __name__ == "__main__":
                 "gdf": gdf_parcelles,
                 "name": "Parcelles",
                 "color": "green",
-                "info": "numero-ilot-reference",
+                "info": "numero-ilot-reference, code-culture, surface-admissible",
             },
             {
                 "gdf": gdf_bio,
                 "name": "Parcelles Bio",
                 "color": "black",
+                "info": "code-mesure",
             },
             {
                 "gdf": gdf_maec,
                 "name": "MAEC",
                 "color": "blue",
+                "info": "code-mesure",
             },
             {
                 "gdf": gdf_sna,
                 "name": "SNA (Surface Non Agricole)",
                 "color": "green",
-                "info": "categorieSna",
+                "info": "categorieSna, typeSna, surfaceGraphique",
             },
             {
                 "gdf": gdf_zdh,
@@ -249,7 +277,12 @@ if __name__ == "__main__":
             },
         ]
         visu_folium_layers(
-            layers_folium,
+            layers=layers_folium,
+            title_folium=(
+                df_demandeur["exploitation"].values[0]
+                if not df_demandeur.empty
+                else "Exploitation"
+            ),
             html_output=f"{OUTPUT_DIR}/visu_exploitation.html",
         )
 
@@ -278,5 +311,4 @@ if __name__ == "__main__":
     # - pouvoir extraire uniquement les infos relatifs à un champ
     #   (ex: que les zdh, que les zna ...)
     # - nombre stocke sous forme de texte dans excel
-    # - on ne récupère pas les coordonnées bancaire (iban/bic/titulaire)
     # - on ne traite pas les données de pièces jointes
