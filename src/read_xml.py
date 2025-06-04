@@ -11,6 +11,7 @@ import os
 import pandas as pd
 import geopandas as gpd
 import folium
+from folium.plugins import FloatImage, MiniMap
 
 # Importer les fonctions d'extraction nécessaires
 from extract_functions.extract_aides_pac import extract_aides_pac
@@ -81,31 +82,79 @@ def check_extension(choices):
     return Act
 
 
-def visu_folium(
-    gdf, geo_name="geometry", fillcolor="red", color="black", html_output="output.html"
-):
+def visu_folium_layers(layers, html_output="output.html"):
     """
-    Visualisation dynamique avec Folium
-    """
-    if not gdf.empty:
-        # Calcul du centroïd des géométries pour centrer l'affichage
-        union = gdf.union_all()
-        centroid = union.centroid
+    Visualisation dynamique avec Folium à partir d'une liste de couches.
 
-        m = folium.Map(
-            location=(centroid.y, centroid.x), zoom_start=12, tiles="CartoDB positron"
-        )
-        for _, r in gdf.iterrows():
-            sim_geo = gpd.GeoSeries(r[geo_name])
-            geo_j = sim_geo.to_json()
-            geo_j = folium.GeoJson(
-                data=geo_j,
-                style_function=lambda x: {
-                    "fillColor": fillcolor,
-                    "color": color,
-                },
-            ).add_to(m)
-        m.save(html_output)
+    Paramètres :
+    - layers : liste de dictionnaires, chacun contenant :
+        {
+            "gdf": GeoDataFrame,
+            "name": Nom de la couche,
+            "color": Couleur principale (contour et remplissage),
+        }
+    - html_output : nom du fichier HTML de sortie.
+    """
+
+    # Trouver un gdf non vide pour centrer la carte (base_gdf)
+    for layer in layers:
+        if not layer["gdf"].empty:
+            base_gdf = layer["gdf"]
+            break
+    else:
+        print("Aucune couche valide pour centrer la carte.")
+        return
+
+    # Centrage
+    center = base_gdf.to_crs(epsg=4326).geometry.union_all().centroid
+    map_center = [center.y, center.x]
+
+    # Création de la carte
+    f = folium.Figure(width=800, height=800)
+    m = folium.Map(location=map_center, zoom_start=12).add_to(f)
+
+    # Ajout des couches
+    for layer in layers:
+        gdf = layer["gdf"]
+        if gdf.empty:
+            continue
+        gdf = gdf.to_crs(epsg=4326)
+        color_layer = layer.get("color", "blue")
+        show_layer = layer.get("show", False)
+        info_layer = layer.get("info", None)
+
+        folium.GeoJson(
+            data=gdf.to_json(),
+            name=layer["name"],
+            show=show_layer,
+            style_function=lambda x, col=color_layer: {
+                "fillColor": col,
+                "color": col,
+                "weight": 2,
+                "fillOpacity": 0.2,
+            },
+            highlight_function=lambda x, col=color_layer: {
+                "fillColor": col,
+                "color": col,
+                "weight": 3,
+                "fillOpacity": 0.7,
+            },
+            tooltip=folium.GeoJsonTooltip(
+                fields=[info_layer],
+                aliases=[info_layer],
+            ),
+        ).add_to(m)
+
+    folium.LayerControl().add_to(m)
+
+    # Ajout du logo Solagro
+    url_logo = "https://osez-agroecologie.org/images/env/logo_solagro_hd.png"
+    FloatImage(url_logo, bottom=0, left=0, width="150px").add_to(m)
+
+    # Ajout de la minimap
+    MiniMap().add_to(m)
+
+    m.save(html_output)
 
 
 def ajouter_onglet(data, excel_file, onglet):
@@ -162,14 +211,47 @@ if __name__ == "__main__":
 
     if CREATE_VISU_HTML:
         # Création de visu dynamique avec Folium
-        visu_folium(gdf_ilots, fillcolor="red", html_output=f"{OUTPUT_DIR}/ilots.html")
-        visu_folium(
-            gdf_parcelles, fillcolor="blue", html_output=f"{OUTPUT_DIR}/parcelles.html"
+        layers_folium = [
+            {
+                "gdf": gdf_ilots,
+                "name": "Ilots",
+                "color": "blue",
+                "info": "numero-ilot-reference",
+                "show": True,
+            },
+            {
+                "gdf": gdf_parcelles,
+                "name": "Parcelles",
+                "color": "green",
+                "info": "numero-ilot-reference",
+            },
+            {
+                "gdf": gdf_bio,
+                "name": "Parcelles Bio",
+                "color": "black",
+            },
+            {
+                "gdf": gdf_maec,
+                "name": "MAEC",
+                "color": "blue",
+            },
+            {
+                "gdf": gdf_sna,
+                "name": "SNA (Surface Non Agricole)",
+                "color": "green",
+                "info": "categorieSna",
+            },
+            {
+                "gdf": gdf_zdh,
+                "name": "ZDH (Zone de Densité Homogène)",
+                "color": "black",
+                "info": "numero-zdh-declaree",
+            },
+        ]
+        visu_folium_layers(
+            layers_folium,
+            html_output=f"{OUTPUT_DIR}/visu_exploitation.html",
         )
-        visu_folium(gdf_bio, fillcolor="green", html_output=f"{OUTPUT_DIR}/bio.html")
-        visu_folium(gdf_maec, fillcolor="green", html_output=f"{OUTPUT_DIR}/maec.html")
-        visu_folium(gdf_sna, fillcolor="orange", html_output=f"{OUTPUT_DIR}/sna.html")
-        visu_folium(gdf_zdh, fillcolor="orange", html_output=f"{OUTPUT_DIR}/zdh.html")
 
     if EXCEL_FILENAME is not None:
         # Création d'un fichier excel en sortie
